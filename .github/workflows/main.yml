@@ -1,0 +1,40 @@
+name: Add to project
+run-name: Add issue "${{ github.event.issue.title }}" to the designated team project
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  track_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project id
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }} # action token managed by IT
+          ORGANIZATION: tadodotcom
+          PROJECT_NUMBER: 1 # https://github.com/users/MaxiLacher/projects/1/views/1
+        run: |
+          gh api graphql -f query='
+            query($organization: String!, $projectNumber: Int!) {
+              organization(login: $organization){
+                projectV2(number: $projectNumber) {
+                  id
+                }
+              }
+            }' -f organization=$ORGANIZATION -F projectNumber=$PROJECT_NUMBER > project_data.json
+          echo 'PROJECT_ID='$(jq '.data.organization.projectV2.id' project_data.json) >> $GITHUB_ENV
+      - name: Add issue to project
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }} # action token managed by IT
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          gh api graphql -f query='
+            mutation($projectId:ID!, $issueId:ID!) {
+              addProjectV2ItemById(input: {projectId: $projectId, contentId: $issueId}) {
+                item {
+                  id
+                }
+              }
+           }' -f projectId=$PROJECT_ID -f issueId=$ISSUE_ID
