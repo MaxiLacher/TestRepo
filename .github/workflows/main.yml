@@ -14,7 +14,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }} # action token managed by IT
           ORGANIZATION: tadodotcom
-          PROJECT_NUMBER: 1 # https://github.com/users/MaxiLacher/projects/1/views/1
+          PROJECT_NUMBER: 1 # https://github.com/users/MaxiLacher/projects/1
         run: |
           gh api graphql -f query='
             query($organization: String!, $projectNumber: Int!) {
